@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Titanic Survival Predictor</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input, select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #3498db;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            width: 100%;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 4px;
+            display: none;
+        }
+        .survived {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .not-survived {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        .probability {
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <h1>Titanic Survival Predictor</h1>
+    
+    <form id="predictionForm">
+        <div class="form-group">
+            <label for="pclass">Passenger Class:</label>
+            <select id="pclass" required>
+                <option value="1">1st Class</option>
+                <option value="2">2nd Class</option>
+                <option value="3">3rd Class</option>
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <label for="name">Name:</label>
+            <input type="text" id="name" placeholder="Enter passenger name">
+        </div>
+        
+        <div class="form-group">
+            <label for="sex">Sex:</label>
+            <select id="sex" required>
+                <option value="female">Female</option>
+                <option value="male">Male</option>
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <label for="age">Age:</label>
+            <input type="number" id="age" placeholder="Enter age" min="0" max="100">
+        </div>
+        
+        <div class="form-group">
+            <label for="sibsp">Number of Siblings/Spouses Aboard:</label>
+            <input type="number" id="sibsp" value="0" min="0" max="10">
+        </div>
+        
+        <div class="form-group">
+            <label for="parch">Number of Parents/Children Aboard:</label>
+            <input type="number" id="parch" value="0" min="0" max="10">
+        </div>
+        
+        <div class="form-group">
+            <label for="fare">Fare:</label>
+            <input type="number" id="fare" step="0.01" placeholder="Ticket fare">
+        </div>
+        
+        <div class="form-group">
+            <label for="embarked">Port of Embarkation:</label>
+            <select id="embarked">
+                <option value="">Unknown</option>
+                <option value="C">Cherbourg</option>
+                <option value="Q">Queenstown</option>
+                <option value="S">Southampton</option>
+            </select>
+        </div>
+        
+        <button type="submit">Predict Survival</button>
+    </form>
+    
+    <div id="result" class="result">
+        <h2>Prediction Result</h2>
+        <p>The passenger <span id="resultText"></span>.</p>
+        <p>Survival probability: <span id="probability" class="probability"></span>%</p>
+    </div>
+    
+    <script>
+        document.getElementById('predictionForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            // Get form values
+            const passengerData = {
+                Pclass: document.getElementById('pclass').value,
+                Name: document.getElementById('name').value || 'Unknown',
+                Sex: document.getElementById('sex').value,
+                Age: document.getElementById('age').value ? parseInt(document.getElementById('age').value) : null,
+                SibSp: parseInt(document.getElementById('sibsp').value),
+                Parch: parseInt(document.getElementById('parch').value),
+                Fare: document.getElementById('fare').value ? parseFloat(document.getElementById('fare').value) : null,
+                Embarked: document.getElementById('embarked').value || null
+            };
+            
+            try {
+                // Replace with your actual API endpoint
+                const apiUrl = 'http://localhost:8001/api/v1/predict';
+                
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        inputs: [passengerData]
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error('API request failed');
+                }
+                
+                const data = await response.json();
+                
+                // Display results
+                const resultDiv = document.getElementById('result');
+                const resultText = document.getElementById('resultText');
+                const probability = document.getElementById('probability');
+                
+                if (data.preds && data.preds.length > 0) {
+                    const survived = data.preds[0] === 1;
+                    const survivalProb = (data.probs[0] * 100).toFixed(2);
+                    
+                    resultDiv.className = survived ? 'result survived' : 'result not-survived';
+                    resultText.textContent = survived ? 'would have survived' : 'would not have survived';
+                    probability.textContent = survivalProb;
+                    
+                    resultDiv.style.display = 'block';
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Prediction failed. Please check console for details.');
+            }
+        });
+    </script>
+</body>
+</html>
