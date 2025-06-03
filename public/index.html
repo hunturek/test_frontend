@@ -132,20 +132,22 @@
         document.getElementById('predictionForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             
-            // Get form values
+            // Get form values with ALL required fields
             const passengerData = {
-                Pclass: document.getElementById('pclass').value,
+                PassengerId: 0,  // Обязательное поле
+                Pclass: parseInt(document.getElementById('pclass').value),
                 Name: document.getElementById('name').value || 'Unknown',
                 Sex: document.getElementById('sex').value,
                 Age: document.getElementById('age').value ? parseInt(document.getElementById('age').value) : null,
                 SibSp: parseInt(document.getElementById('sibsp').value),
                 Parch: parseInt(document.getElementById('parch').value),
+                Ticket: "N/A",    // Обязательное поле
                 Fare: document.getElementById('fare').value ? parseFloat(document.getElementById('fare').value) : null,
+                Cabin: "N/A",     // Обязательное поле
                 Embarked: document.getElementById('embarked').value || null
             };
             
             try {
-                // Replace with your actual API endpoint
                 const apiUrl = '/api/v1/predict';
                 
                 const response = await fetch(apiUrl, {
@@ -154,15 +156,19 @@
                         'Content-Type': 'application/json',
                     },
                     body: JSON.stringify({
-                        inputs: [passengerData]
+                        inputs: [passengerData]  // Отправляем в правильном формате
                     })
                 });
                 
                 if (!response.ok) {
-                    throw new Error('API request failed');
+                    // Показываем больше информации об ошибке
+                    const errorData = await response.json();
+                    console.error("API Error:", errorData);
+                    throw new Error(`API Error: ${response.status}`);
                 }
                 
                 const data = await response.json();
+                console.log("API Response:", data);
                 
                 // Display results
                 const resultDiv = document.getElementById('result');
@@ -181,7 +187,7 @@
                 }
             } catch (error) {
                 console.error('Error:', error);
-                alert('Prediction failed. Please check console for details.');
+                alert('Prediction failed. Check console for details.');
             }
         });
     </script>
